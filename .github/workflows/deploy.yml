@@ -37,6 +37,7 @@ jobs:
 
     - name: Retrieve VPC ID
       id: get_vpc_id
+      run: |
         VPC_ID=$(aws ec2 describe-vpcs --query 'Vpcs[0].VpcId' --output text)
         echo "VPC_ID=$VPC_ID" >> $GITHUB_ENV
 
