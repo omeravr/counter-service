@@ -13,11 +13,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Ensure Docker is running
-      run: |
-        whoami
-        sudo systemctl start docker
-        sudo systemctl enable docker
+#    - name: Ensure Docker is running
+#      run: |
+#        whoami
+#        sudo systemctl start docker
+#        sudo systemctl enable docker
 
 
     - name: Log in to Docker Hub
@@ -42,6 +42,18 @@ jobs:
         kubectl apply -f k8s/service.yaml
 
 
+    - name: Retrieve LoadBalancer Name
+      id: get_lb_name
+      run: |
+        LB_NAME=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(DNSName, 'nb')].DNSName" --output text)
+        echo "LOAD_BALANCER_NAME=$LB_NAME" >> $GITHUB_ENV
+
+    - name: Validate Counter Service
+      run: |
+        # Initial POST request
+        curl -X POST http://$LOAD_BALANCER_NAME/
+        # Subsequent GET request to check the counter value
+        curl http://$LOAD_BALANCER_NAME/
 
 
 
