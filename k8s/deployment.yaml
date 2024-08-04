@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: counter-service
-        image: <DOCKER_USERNAME>/counter-service:<IMAGE_TAG>
+        image: <IMAGE_NAME>
         ports:
         - containerPort: 80
 
