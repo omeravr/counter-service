@@ -15,6 +15,7 @@ jobs:
 
     - name: Ensure Docker is running
       run: |
+        whoami
         sudo systemctl start docker
         sudo systemctl enable docker
 
