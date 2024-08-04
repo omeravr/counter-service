@@ -6,7 +6,7 @@ COPY counter-service.py .
 
 RUN pip install flask
 
-EXPOSE 443
+EXPOSE 80
 
 CMD ["python", "counter-service.py"]
 

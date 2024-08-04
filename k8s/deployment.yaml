@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: counter-service
-        image: registry-1.docker.io/omerav10/customer-facing-webserver:v7
+        image: <DOCKER_USERNAME>/counter-service:<IMAGE_TAG>
         ports:
         - containerPort: 80
 
