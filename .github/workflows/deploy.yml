@@ -13,7 +13,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-
     - name: Log in to Docker Hub
       run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login ${{ secrets.DOCKER_REGISTRY }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
@@ -50,6 +49,11 @@ jobs:
         echo "LOAD_BALANCER_NAME=$LB_NAME" >> $GITHUB_ENV
         echo "LOAD_BALANCER_ARN=$LB_ARN" >> $GITHUB_ENV
 
+    - name: Retrieve Service Port
+      id: get_service_port
+      run: |
+        SERVICE_PORT=$(kubectl get svc counter-service -o jsonpath='{.spec.ports[0].nodePort}')
+        echo "SERVICE_PORT=$SERVICE_PORT" >> $GITHUB_ENV
 
     - name: Create Target Group
       id: create_target_group
@@ -57,13 +61,12 @@ jobs:
         TG_ARN=$(aws elbv2 create-target-group \
           --name counter-service-tg \
           --protocol TCP \
-          --port 80 \
+          --port ${{ env.SERVICE_PORT }} \
           --vpc-id $VPC_ID \
           --target-type ip \
           --query 'TargetGroups[0].TargetGroupArn' \
           --output text)
         echo "TARGET_GROUP_ARN=$TG_ARN" >> $GITHUB_ENV
-
 
     - name: Create Listener
       run: |
@@ -73,6 +76,13 @@ jobs:
           --port 80 \
           --default-actions Type=forward,TargetGroupArn=${{ env.TARGET_GROUP_ARN }}
 
+    - name: Update TargetGroupBinding
+      run: |
+        sed -i "s|<TARGET_GROUP_ARN>|${{ env.TARGET_GROUP_ARN }}|g" k8s/target-group-binding.yaml
+
+    - name: Apply TargetGroupBinding
+      run: |
+        kubectl apply -f k8s/target-group-binding.yaml
 
     - name: Validate Counter Service
       run: |
@@ -80,8 +90,6 @@ jobs:
         curl -X POST http://$LOAD_BALANCER_NAME/
         # Subsequent GET request to check the counter value
         curl http://$LOAD_BALANCER_NAME/
-
-
 
 
 

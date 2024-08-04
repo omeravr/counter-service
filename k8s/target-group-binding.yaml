@@ -8,6 +8,6 @@ spec:
   serviceRef:
     name: counter-service
     port: 80
-  targetGroupARN: arn:aws:elasticloadbalancing:eu-central-1:045360881194:targetgroup/counter-service/945aab2007a20318
+  targetGroupARN: <TARGET_GROUP_ARN>
   targetType: ip
 
