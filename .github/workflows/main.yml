@@ -13,9 +13,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-
     - name: List EKS clusters
-      run: aws eks list-clusters
+      uses: aws-actions/aws-cli-action@v1
+      with:
+        args: eks list-clusters
 
+    - name: Configure kubectl
+      uses: aws-actions/aws-eks-kubectl-action@v1
+      with:
+        cluster-name: ${{ secrets.EKS_CLUSTER_NAME }}
+        region: eu-central-1
 
+    - name: List nodes in the EKS cluster
+      run: kubectl get nodes
 
