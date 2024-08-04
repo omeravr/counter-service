@@ -13,12 +13,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-#    - name: Ensure Docker is running
-#      run: |
-#        whoami
-#        sudo systemctl start docker
-#        sudo systemctl enable docker
-
 
     - name: Log in to Docker Hub
       run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login ${{ secrets.DOCKER_REGISTRY }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
@@ -41,12 +35,43 @@ jobs:
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
 
+    - name: Retrieve VPC ID
+      id: get_vpc_id
+        VPC_ID=$(aws ec2 describe-vpcs --query 'Vpcs[0].VpcId' --output text)
+        echo "VPC_ID=$VPC_ID" >> $GITHUB_ENV
 
     - name: Retrieve LoadBalancer Name
       id: get_lb_name
       run: |
-        LB_NAME=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(DNSName, 'nb')].DNSName" --output text)
+        CLUSTER_NAME=${{ secrets.EKS_CLUSTER_NAME }}
+        LB_NAME=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(DNSName, 'nb') && contains(LoadBalancerName, '$CLUSTER_NAME')].DNSName" --output text)
+        LB_ARN=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(DNSName, 'nb') && contains(LoadBalancerName, '$CLUSTER_NAME')].LoadBalancerArn" --output text)
         echo "LOAD_BALANCER_NAME=$LB_NAME" >> $GITHUB_ENV
+        echo "LOAD_BALANCER_ARN=$LB_ARN" >> $GITHUB_ENV
+
+
+    - name: Create Target Group
+      id: create_target_group
+      run: |
+        TG_ARN=$(aws elbv2 create-target-group \
+          --name counter-service-tg \
+          --protocol TCP \
+          --port 80 \
+          --vpc-id $VPC_ID \
+          --target-type ip \
+          --query 'TargetGroups[0].TargetGroupArn' \
+          --output text)
+        echo "TARGET_GROUP_ARN=$TG_ARN" >> $GITHUB_ENV
+
+
+    - name: Create Listener
+      run: |
+        aws elbv2 create-listener \
+          --load-balancer-arn ${{ env.LOAD_BALANCER_ARN }} \
+          --protocol TCP \
+          --port 80 \
+          --default-actions Type=forward,TargetGroupArn=${{ env.TARGET_GROUP_ARN }}
+
 
     - name: Validate Counter Service
       run: |
