@@ -2,6 +2,38 @@
 
 This repository contains the necessary configurations to deploy the Counter Service application using Helm and GitHub Actions. The Helm chart for the application is hosted on GitHub Pages and is set up to be deployed to an Amazon EKS cluster.
 
+
+### Prerequisites
+1. Running on a Local Runner
+To deploy the Counter Service using this setup, you need to have a local runner that is connected to your AWS account. The local runner can either run "on-the-fly" using the ./run.sh script or be managed as a service using sudo ./svc.sh start.
+
+Running "On-the-Fly"
+To start the runner immediately without setting it up as a service:
+sudo ./run.sh
+
+Running as a Service
+To set up and start the runner as a service:
+sudo ./svc.sh install
+sudo ./svc.sh start
+
+
+2. Configuring Secrets
+Ensure that the following secrets are set up in your GitHub repository. These secrets are necessary for the GitHub Actions workflow to authenticate and deploy the application.
+
+DOCKER_PASSWORD: The password for your Docker Hub account.
+DOCKER_REGISTRY: The Docker registry URL (usually registry-1.docker.io/omerav10 for Docker Hub).
+DOCKER_USERNAME: Your Docker Hub username.
+EKS_CLUSTER_NAME: The name of your Amazon EKS cluster.
+To add these secrets in GitHub:
+
+Go to your repository on GitHub.
+Click on Settings.
+Navigate to Secrets > Actions.
+Click on New repository secret.
+Add each secret with its corresponding value.
+
+
+
 ## GitHub Actions Workflow
 
 The GitHub Actions workflow is defined in the `.github/workflows/deploy.yml` file. The workflow performs the following steps:
@@ -79,4 +111,35 @@ helm fetch my-repo/counter-service-chart
 This setup ensures that the Helm chart for the Counter Service application is easily accessible and deployable using GitHub Actions and Helm.
 
 
+
+
+
+### Reverting Changes
+If you need to revert the deployment, follow these steps to clean up the Helm deployment and associated AWS resources.
+
+1. Delete the Helm Deployment
+To uninstall the Helm release:
+helm uninstall counter-service -n counter-service
+
+2. Delete the TargetGroupBinding
+To delete the TargetGroupBinding resource from your Kubernetes cluster:
+kubectl delete TargetGroupBinding counter-service -n counter-service
+
+3. Delete the Listener and Target Group on AWS
+To clean up the listener and target group on AWS, follow these steps:
+
+Delete the Listener:
+
+Go to the AWS Management Console.
+Navigate to the EC2 Dashboard.
+Select Load Balancers under the Load Balancing section.
+Choose the load balancer associated with your EKS cluster.
+Select the Listeners tab.
+Find the listener you want to delete and click on the Actions dropdown, then select Delete.
+Delete the Target Group:
+
+In the EC2 Dashboard, select Target Groups under the Load Balancing section.
+Find the target group associated with your Listener.
+Select the target group and click on Actions, then select Delete.
+By following these steps, you can ensure that all resources associated with the deployment are properly cleaned up.
 
