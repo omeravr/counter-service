@@ -3,12 +3,12 @@ entries:
   counter-service-chart:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2024-08-05T11:33:35.851394941Z"
+    created: "2024-08-05T11:37:18.142343279Z"
     description: A Helm chart for Kubernetes
     digest: 66bde68638c7b927d1dc19b3c3b0d00a48727815e5c10936560dc48eb007bc6f
     name: counter-service-chart
     type: application
     urls:
-    - https://omeravr.github.io/counter-service/docs/counter-service-chart-0.1.0.tgz
+    - https://omeravr.github.io/counter-service/counter-service-chart-0.1.0.tgz
     version: 0.1.0
-generated: "2024-08-05T11:33:35.850936389Z"
+generated: "2024-08-05T11:37:18.141889474Z"
