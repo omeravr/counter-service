@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - private/omeravr/create-helm-chart
 
 jobs:
   build-and-deploy:
@@ -26,13 +27,12 @@ jobs:
     - name: Configure kubectl
       run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region eu-central-1
 
-    - name: Deploy to EKS
-      env:
-        IMAGE_TAG: v1
+    - name: Deploy using Helm
       run: |
-        sed -i "s|<IMAGE_NAME>|registry-1.docker.io/omerav10/counter-service:$IMAGE_TAG|g" k8s/deployment.yaml
-        kubectl apply -f k8s/deployment.yaml
-        kubectl apply -f k8s/service.yaml
+        helm repo remove my-repo
+        helm repo add my-repo https://omeravr.github.io/counter-service
+        helm repo update
+        helm upgrade --install counter-service my-repo/counter-service-chart --namespace counter-service --create-namespace
 
     - name: Retrieve VPC ID
       id: get_vpc_id
@@ -52,7 +52,7 @@ jobs:
     - name: Retrieve Service Port
       id: get_service_port
       run: |
-        SERVICE_PORT=$(kubectl get svc counter-service -o jsonpath='{.spec.ports[0].nodePort}')
+        SERVICE_PORT=$(kubectl get svc counter-service -n counter-service -o jsonpath='{.spec.ports[0].nodePort}')
         echo "SERVICE_PORT=$SERVICE_PORT" >> $GITHUB_ENV
 
     - name: Create Target Group
@@ -82,7 +82,7 @@ jobs:
 
     - name: Apply TargetGroupBinding
       run: |
-        kubectl apply -f k8s/target-group-binding.yaml
+        kubectl apply -f k8s/target-group-binding.yaml -n counter-service
 
     - name: Validate Counter Service
       run: |
@@ -90,6 +90,4 @@ jobs:
         curl -X POST http://$LOAD_BALANCER_NAME/
         # Subsequent GET request to check the counter value
         curl http://$LOAD_BALANCER_NAME/
-
-
 
