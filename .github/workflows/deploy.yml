@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - private/omeravr/create-helm-chart
 
 jobs:
   build-and-deploy:
@@ -90,6 +91,7 @@ jobs:
         curl -X POST http://$LOAD_BALANCER_NAME/
         # Subsequent GET request to check the counter value
         curl http://$LOAD_BALANCER_NAME/
+
 
 
 
