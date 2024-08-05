@@ -91,3 +91,4 @@ jobs:
         # Subsequent GET request to check the counter value
         curl http://$LOAD_BALANCER_NAME/
 
+
