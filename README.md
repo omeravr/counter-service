@@ -19,6 +19,7 @@ sudo ./svc.sh start
 
 2. Configuring Secrets
 Ensure that the following secrets are set up in your GitHub repository. These secrets are necessary for the GitHub Actions workflow to authenticate and deploy the application.
+
 **DOCKER_PASSWORD**: The password for your Docker Hub account.
 
 **DOCKER_REGISTRY**: The Docker registry URL (usually registry-1.docker.io/omerav10 for Docker Hub).
