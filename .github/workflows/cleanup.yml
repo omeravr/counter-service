@@ -43,7 +43,8 @@ jobs:
     - name: Retrieve Target Group ARN
       id: get_tg_arn
       run: |
-        TG_ARN=$(aws elbv2 describe-target-groups --load-balancer-arn ${{ env.LOAD_BALANCER_ARN }} --query "TargetGroups[?TargetGroupName=='counter-service-tg'].TargetGroupArn" --output text)
+        TG_NAME=counter-service-tg-${{ secrets.EKS_CLUSTER_NAME }}
+        TG_ARN=$(aws elbv2 describe-target-groups --query "TargetGroups[?TargetGroupName=='$TG_NAME'].TargetGroupArn" --output text)
         echo "TARGET_GROUP_ARN=$TG_ARN" >> $GITHUB_ENV
 
     - name: Delete Target Group
@@ -54,4 +55,3 @@ jobs:
         else
           echo "No target group ARN found"
         fi
-

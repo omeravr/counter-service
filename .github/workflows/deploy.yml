@@ -58,6 +58,7 @@ jobs:
     - name: Create Target Group
       id: create_target_group
       run: |
+        TG_NAME=counter-service-tg-${{ secrets.EKS_CLUSTER_NAME }}
         TG_ARN=$(aws elbv2 create-target-group \
           --name counter-service-tg \
           --protocol TCP \
