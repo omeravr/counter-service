@@ -19,11 +19,14 @@ sudo ./svc.sh start
 
 2. Configuring Secrets
 Ensure that the following secrets are set up in your GitHub repository. These secrets are necessary for the GitHub Actions workflow to authenticate and deploy the application.
-
 **DOCKER_PASSWORD**: The password for your Docker Hub account.
+
 **DOCKER_REGISTRY**: The Docker registry URL (usually registry-1.docker.io/omerav10 for Docker Hub).
+
 **DOCKER_USERNAME**: Your Docker Hub username.
+
 **EKS_CLUSTER_NAME**: The name of your Amazon EKS cluster.
+
 
 To add these secrets in GitHub:
 Go to your repository on GitHub.
@@ -117,7 +120,7 @@ This setup ensures that the Helm chart for the Counter Service application is ea
 ### Reverting Changes
 If you need to revert the deployment, follow these steps to clean up the Helm deployment and associated AWS resources.
 
-## Using Cleanup Workflow
+### Using Cleanup Workflow
 Using the Cleanup Workflow
 A dedicated GitHub Actions workflow has been created to handle the cleanup of resources. You can trigger this workflow manually.
 
