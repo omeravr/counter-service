@@ -86,11 +86,30 @@ jobs:
 
     - name: Validate Counter Service
       run: |
+        # Retry function
+        retry() {
+          local n=1
+          local max=5
+          local delay=10
+          while true; do
+            "$@" && break || {
+              if [[ $n -lt $max ]]; then
+                ((n++))
+                echo "Attempt $n/$max:"
+                sleep $delay;
+              else
+                echo "The command has failed after $n attempts."
+                return 1
+              fi
+            }
+          done
+        }
+    
         # Initial POST request
-        curl -X POST http://$LOAD_BALANCER_NAME/
+        retry curl -X POST http://$LOAD_BALANCER_NAME/
+    
         # Subsequent GET request to check the counter value
-        curl http://$LOAD_BALANCER_NAME/
-
+        retry curl http://$LOAD_BALANCER_NAME/
 
 
 
