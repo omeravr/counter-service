@@ -22,25 +22,36 @@ jobs:
       run: |
         kubectl delete TargetGroupBinding counter-service -n counter-service
 
-    - name: Retrieve LoadBalancer Name
-      id: get_lb_name
+    - name: Retrieve LoadBalancer ARN
+      id: get_lb_arn
       run: |
         CLUSTER_NAME=${{ secrets.EKS_CLUSTER_NAME }}
         LB_ARN=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(DNSName, 'nb') && contains(LoadBalancerName, '$CLUSTER_NAME')].LoadBalancerArn" --output text)
         echo "LOAD_BALANCER_ARN=$LB_ARN" >> $GITHUB_ENV
 
+    - name: Retrieve and Delete Listener
+      id: get_delete_listener
+      run: |
+        LISTENER_ARN=$(aws elbv2 describe-listeners --load-balancer-arn ${{ env.LOAD_BALANCER_ARN }} --query "Listeners[?Port==\`80\`].ListenerArn" --output text)
+        if [ -n "$LISTENER_ARN" ]; then
+          aws elbv2 delete-listener --listener-arn $LISTENER_ARN
+          echo "Deleted listener: $LISTENER_ARN"
+        else
+          echo "No listener found on port 80 for load balancer: ${{ env.LOAD_BALANCER_ARN }}"
+        fi
+
     - name: Retrieve Target Group ARN
       id: get_tg_arn
       run: |
-        TG_ARN=$(aws elbv2 describe-target-groups --query "TargetGroups[?LoadBalancerArns=='${{ env.LOAD_BALANCER_ARN }}'].TargetGroupArn" --output text)
+        TG_ARN=$(aws elbv2 describe-target-groups --load-balancer-arn ${{ env.LOAD_BALANCER_ARN }} --query "TargetGroups[?TargetGroupName=='counter-service-tg'].TargetGroupArn" --output text)
         echo "TARGET_GROUP_ARN=$TG_ARN" >> $GITHUB_ENV
-
-    - name: Delete Listener
-      run: |
-        LISTENER_ARN=$(aws elbv2 describe-listeners --load-balancer-arn ${{ env.LOAD_BALANCER_ARN }} --query "Listeners[0].ListenerArn" --output text)
-        aws elbv2 delete-listener --listener-arn $LISTENER_ARN
 
     - name: Delete Target Group
       run: |
-        aws elbv2 delete-target-group --target-group-arn ${{ env.TARGET_GROUP_ARN }}
+        if [ -n "${{ env.TARGET_GROUP_ARN }}" ]; then
+          aws elbv2 delete-target-group --target-group-arn ${{ env.TARGET_GROUP_ARN }}
+          echo "Deleted target group: ${{ env.TARGET_GROUP_ARN }}"
+        else
+          echo "No target group ARN found"
+        fi
 
