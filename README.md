@@ -20,12 +20,12 @@ sudo ./svc.sh start
 2. Configuring Secrets
 Ensure that the following secrets are set up in your GitHub repository. These secrets are necessary for the GitHub Actions workflow to authenticate and deploy the application.
 
-DOCKER_PASSWORD: The password for your Docker Hub account.
-DOCKER_REGISTRY: The Docker registry URL (usually registry-1.docker.io/omerav10 for Docker Hub).
-DOCKER_USERNAME: Your Docker Hub username.
-EKS_CLUSTER_NAME: The name of your Amazon EKS cluster.
-To add these secrets in GitHub:
+**DOCKER_PASSWORD**: The password for your Docker Hub account.
+**DOCKER_REGISTRY**: The Docker registry URL (usually registry-1.docker.io/omerav10 for Docker Hub).
+**DOCKER_USERNAME**: Your Docker Hub username.
+**EKS_CLUSTER_NAME**: The name of your Amazon EKS cluster.
 
+To add these secrets in GitHub:
 Go to your repository on GitHub.
 Click on Settings.
 Navigate to Secrets > Actions.
@@ -117,6 +117,21 @@ This setup ensures that the Helm chart for the Counter Service application is ea
 ### Reverting Changes
 If you need to revert the deployment, follow these steps to clean up the Helm deployment and associated AWS resources.
 
+## Using Cleanup Workflow
+Using the Cleanup Workflow
+A dedicated GitHub Actions workflow has been created to handle the cleanup of resources. You can trigger this workflow manually.
+
+1. Navigate to the Actions Tab:
+     Go to the Actions tab in your GitHub repository.
+
+2. Select the Cleanup Workflow:
+     Select the "Cleanup Resources" workflow from the list of workflows.
+
+3. Run Workflow:
+     Click on the "Run workflow" button and provide any required inputs if prompted. This will manually trigger the cleanup workflow.
+
+
+### Manual 
 1. Delete the Helm Deployment
 To uninstall the Helm release:
 helm uninstall counter-service -n counter-service
