@@ -1,0 +1,46 @@
+name: Cleanup Resources
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure kubectl
+      run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region eu-central-1
+
+    - name: Uninstall Helm Release
+      run: |
+        helm uninstall counter-service -n counter-service
+
+    - name: Delete TargetGroupBinding
+      run: |
+        kubectl delete TargetGroupBinding counter-service -n counter-service
+
+    - name: Retrieve LoadBalancer Name
+      id: get_lb_name
+      run: |
+        CLUSTER_NAME=${{ secrets.EKS_CLUSTER_NAME }}
+        LB_ARN=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?contains(DNSName, 'nb') && contains(LoadBalancerName, '$CLUSTER_NAME')].LoadBalancerArn" --output text)
+        echo "LOAD_BALANCER_ARN=$LB_ARN" >> $GITHUB_ENV
+
+    - name: Retrieve Target Group ARN
+      id: get_tg_arn
+      run: |
+        TG_ARN=$(aws elbv2 describe-target-groups --query "TargetGroups[?LoadBalancerArns=='${{ env.LOAD_BALANCER_ARN }}'].TargetGroupArn" --output text)
+        echo "TARGET_GROUP_ARN=$TG_ARN" >> $GITHUB_ENV
+
+    - name: Delete Listener
+      run: |
+        LISTENER_ARN=$(aws elbv2 describe-listeners --load-balancer-arn ${{ env.LOAD_BALANCER_ARN }} --query "Listeners[0].ListenerArn" --output text)
+        aws elbv2 delete-listener --listener-arn $LISTENER_ARN
+
+    - name: Delete Target Group
+      run: |
+        aws elbv2 delete-target-group --target-group-arn ${{ env.TARGET_GROUP_ARN }}
+
